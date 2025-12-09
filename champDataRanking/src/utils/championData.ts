@@ -1,13 +1,15 @@
 import type { Champion, ChampionData, CalculatedStats, BenchmarkRole } from '../types/champion';
 
-// Chemin vers les données Data Dragon
-const DATA_DRAGON_PATH = '/datadragon/15.24.1';
+// Version Data Dragon et CDN de Riot Games
+const DD_VERSION = '15.24.1';
+const CDN_BASE = `https://ddragon.leagueoflegends.com/cdn/${DD_VERSION}`;
+const CDN_IMG_BASE = 'https://ddragon.leagueoflegends.com/cdn/img/champion';
 
 // Cache pour les données des champions
 let championsCache: Record<string, Champion> | null = null;
 
 /**
- * Charge les données des champions depuis Data Dragon
+ * Charge les données des champions depuis le CDN de Riot Games
  */
 export async function loadChampions(): Promise<Record<string, Champion>> {
     if (championsCache) {
@@ -15,7 +17,7 @@ export async function loadChampions(): Promise<Record<string, Champion>> {
     }
 
     try {
-        const response = await fetch(`${DATA_DRAGON_PATH}/data/en_US/champion.json`);
+        const response = await fetch(`${CDN_BASE}/data/en_US/champion.json`);
         const data: ChampionData = await response.json();
         championsCache = data.data;
         return championsCache;
@@ -26,24 +28,24 @@ export async function loadChampions(): Promise<Record<string, Champion>> {
 }
 
 /**
- * Récupère l'URL de l'icône d'un champion
+ * Récupère l'URL de l'icône d'un champion depuis le CDN de Riot
  */
 export function getChampionIconUrl(championId: string): string {
-    return `${DATA_DRAGON_PATH}/img/champion/${championId}.png`;
+    return `${CDN_BASE}/img/champion/${championId}.png`;
 }
 
 /**
- * Récupère l'URL du splash art d'un champion
+ * Récupère l'URL du splash art d'un champion depuis le CDN de Riot
  */
 export function getChampionSplashUrl(championId: string, skinNum: number = 0): string {
-    return `/datadragon/img/champion/splash/${championId}_${skinNum}.jpg`;
+    return `${CDN_IMG_BASE}/splash/${championId}_${skinNum}.jpg`;
 }
 
 /**
- * Récupère l'URL de l'image de chargement d'un champion
+ * Récupère l'URL de l'image de chargement d'un champion depuis le CDN de Riot
  */
 export function getChampionLoadingUrl(championId: string, skinNum: number = 0): string {
-    return `/datadragon/img/champion/loading/${championId}_${skinNum}.jpg`;
+    return `${CDN_IMG_BASE}/loading/${championId}_${skinNum}.jpg`;
 }
 
 /**
