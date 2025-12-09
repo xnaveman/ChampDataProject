@@ -3,9 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import type { Champion } from '../../types/champion';
 import { 
   loadChampions, 
-  calculateTankinessScore,
-  calculateDpsScore,
-  calculateMobilityScore,
   getChampionRole
 } from '../../utils/championData';
 import { 
@@ -48,11 +45,12 @@ const SCORE_CATEGORIES: { id: ScoreCategory; name: string; description: string }
 interface ChampionRanking {
   champion: Champion;
   role: BenchmarkRole;
-  tankiness: number;
-  dps: number;
-  mobility: number;
+  dpsScore: number;
+  tankinessScore: number;
+  burstScore: number;
+  utilityScore: number;
+  mobilityScore: number;
   overall: number;
-  customScore?: number;
 }
 
 function getCustomScore(championId: string, category: ScoreCategory): number {
@@ -77,7 +75,6 @@ export default function Rankings() {
   const [champions, setChampions] = useState<Record<string, Champion>>({});
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<BenchmarkRole | 'all'>('all');
-  const [level, setLevel] = useState(6);
   
   const scoreType = searchParams.get('scoreType') as ScoreCategory | null;
 
@@ -109,42 +106,55 @@ export default function Rankings() {
       );
     }
 
-    // Calcul des scores
+    // Calcul des scores (custom uniquement)
     const scored = championList.map(c => {
-      const tankiness = calculateTankinessScore(c, level);
-      const dps = calculateDpsScore(c, level);
-      const mobility = calculateMobilityScore(c);
+      const dpsScore = getCustomScore(c.id, 'dps');
+      const tankinessScore = getCustomScore(c.id, 'tankiness');
+      const burstScore = getCustomScore(c.id, 'burst');
+      const utilityScore = getCustomScore(c.id, 'utility');
+      const mobilityScore = getCustomScore(c.id, 'mobility');
       const role = getChampionRole(c);
-      const customScore = scoreType ? getCustomScore(c.id, scoreType) : undefined;
 
       // Score global pondéré selon le rôle
       let overall: number;
       switch (role) {
         case 'tank':
-          overall = tankiness * 0.6 + dps * 0.2 + mobility * 0.2;
+          overall = tankinessScore * 0.5 + dpsScore * 0.1 + mobilityScore * 0.1 + burstScore * 0.1 + utilityScore * 0.2;
           break;
         case 'assassin':
-          overall = tankiness * 0.1 + dps * 0.5 + mobility * 0.4;
+          overall = tankinessScore * 0.05 + dpsScore * 0.2 + mobilityScore * 0.25 + burstScore * 0.4 + utilityScore * 0.1;
           break;
         case 'marksman':
-          overall = tankiness * 0.15 + dps * 0.7 + mobility * 0.15;
+          overall = tankinessScore * 0.1 + dpsScore * 0.5 + mobilityScore * 0.15 + burstScore * 0.2 + utilityScore * 0.05;
           break;
         case 'mage':
-          overall = tankiness * 0.2 + dps * 0.5 + mobility * 0.3;
+          overall = tankinessScore * 0.1 + dpsScore * 0.3 + mobilityScore * 0.15 + burstScore * 0.35 + utilityScore * 0.1;
           break;
         case 'support':
-          overall = tankiness * 0.4 + dps * 0.2 + mobility * 0.4;
+          overall = tankinessScore * 0.2 + dpsScore * 0.05 + mobilityScore * 0.15 + burstScore * 0.1 + utilityScore * 0.5;
           break;
         default: // fighter
-          overall = tankiness * 0.35 + dps * 0.4 + mobility * 0.25;
+          overall = tankinessScore * 0.25 + dpsScore * 0.25 + mobilityScore * 0.15 + burstScore * 0.2 + utilityScore * 0.15;
       }
 
-      return { champion: c, role, tankiness, dps, mobility, overall, customScore };
+      return { champion: c, role, dpsScore, tankinessScore, burstScore, utilityScore, mobilityScore, overall };
     });
 
-    // Tri par score custom si sélectionné, sinon par score global
+    // Tri par catégorie si sélectionné, sinon par score global
     if (scoreType) {
-      scored.sort((a, b) => (b.customScore || 0) - (a.customScore || 0));
+      scored.sort((a, b) => {
+        const scoreA = scoreType === 'dps' ? a.dpsScore 
+          : scoreType === 'tankiness' ? a.tankinessScore
+          : scoreType === 'burst' ? a.burstScore
+          : scoreType === 'utility' ? a.utilityScore
+          : a.mobilityScore;
+        const scoreB = scoreType === 'dps' ? b.dpsScore 
+          : scoreType === 'tankiness' ? b.tankinessScore
+          : scoreType === 'burst' ? b.burstScore
+          : scoreType === 'utility' ? b.utilityScore
+          : b.mobilityScore;
+        return scoreB - scoreA;
+      });
     } else {
       scored.sort((a, b) => b.overall - a.overall);
     }
@@ -210,20 +220,6 @@ export default function Rankings() {
             ))}
           </div>
         </div>
-
-        <div className="filter-section">
-          <span className="filter-label">Niveau:</span>
-          <div className="level-control">
-            <input
-              type="range"
-              min="1"
-              max="18"
-              value={level}
-              onChange={(e) => setLevel(parseInt(e.target.value))}
-            />
-            <span className="level-value">{level}</span>
-          </div>
-        </div>
       </div>
 
       {/* Rankings Grid */}
@@ -249,7 +245,11 @@ export default function Rankings() {
                 <span className="top-role">{item.role}</span>
               </div>
               <div className="top-score">
-                {scoreType ? `${item.customScore || 0}%` : item.overall.toFixed(1)}
+                {scoreType ? `${(scoreType === 'dps' ? item.dpsScore 
+                  : scoreType === 'tankiness' ? item.tankinessScore
+                  : scoreType === 'burst' ? item.burstScore
+                  : scoreType === 'utility' ? item.utilityScore
+                  : item.mobilityScore).toFixed(0)}%` : item.overall.toFixed(1)}
               </div>
             </Link>
           ))}
@@ -275,26 +275,30 @@ export default function Rankings() {
               </div>
               {scoreType ? (
                 <div className="rank-custom-score">
-                  {item.customScore || 0}%
+                  {(scoreType === 'dps' ? item.dpsScore 
+                    : scoreType === 'tankiness' ? item.tankinessScore
+                    : scoreType === 'burst' ? item.burstScore
+                    : scoreType === 'utility' ? item.utilityScore
+                    : item.mobilityScore).toFixed(0)}%
                 </div>
               ) : (
                 <div className="rank-scores">
                   <div className="mini-score">
                     <span className="mini-label">Tank</span>
-                    <span className="mini-value">{item.tankiness.toFixed(0)}</span>
+                    <span className="mini-value">{item.tankinessScore.toFixed(0)}</span>
                   </div>
                   <div className="mini-score">
                     <span className="mini-label">DPS</span>
-                    <span className="mini-value">{item.dps.toFixed(0)}</span>
+                    <span className="mini-value">{item.dpsScore.toFixed(0)}</span>
                   </div>
                   <div className="mini-score">
                     <span className="mini-label">Mob</span>
-                    <span className="mini-value">{item.mobility.toFixed(0)}</span>
+                    <span className="mini-value">{item.mobilityScore.toFixed(0)}</span>
                   </div>
                 </div>
               )}
               <div className="rank-overall">
-                {scoreType ? `${item.customScore || 0}%` : item.overall.toFixed(1)}
+                {item.overall.toFixed(1)}
               </div>
             </Link>
           ))}

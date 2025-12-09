@@ -5,10 +5,7 @@ import {
   loadChampions,
   getChampionIconUrl,
   getChampionSplashUrl,
-  calculateStatsAtLevel,
-  calculateTankinessScore,
-  calculateDpsScore,
-  calculateMobilityScore
+  calculateStatsAtLevel
 } from '../../utils/championData';
 import {
   getChampionBenchmark,
@@ -71,9 +68,6 @@ export default function ChampionDetail() {
   }
 
   const stats = calculateStatsAtLevel(champion, level);
-  const tankinessScore = calculateTankinessScore(champion, level);
-  const dpsScore = calculateDpsScore(champion, level);
-  const mobilityScore = calculateMobilityScore(champion);
 
   // Benchmark data
   const benchmarkData = championId ? getChampionBenchmark(championId) : null;
@@ -138,28 +132,6 @@ export default function ChampionDetail() {
           />
           <span className="level-value">{level}</span>
         </div>
-
-        {/* Benchmark Scores */}
-        <section className="section">
-          <h2 className="section-title">Scores de Benchmark</h2>
-          <div className="scores-grid">
-            <div className="score-card">
-              <img src={tankinessIcon} alt="Tankiness" className="score-icon-img" />
-              <span className="score-label">Tankiness</span>
-              <span className="score-value">{tankinessScore.toFixed(1)}</span>
-            </div>
-            <div className="score-card">
-              <img src={dpsIcon} alt="DPS" className="score-icon-img" />
-              <span className="score-label">DPS</span>
-              <span className="score-value">{dpsScore.toFixed(1)}</span>
-            </div>
-            <div className="score-card">
-              <img src={mobilityIcon} alt="Mobility" className="score-icon-img" />
-              <span className="score-label">Mobility</span>
-              <span className="score-value">{mobilityScore.toFixed(1)}</span>
-            </div>
-          </div>
-        </section>
 
         {/* Base Stats */}
         <section className="section">
