@@ -1,0 +1,12 @@
+{
+  "buildCommand": "cd champDataRanking && npm run build",
+  "outputDirectory": "champDataRanking/dist",
+  "installCommand": "cd champDataRanking && npm install",
+  "framework": null,
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
