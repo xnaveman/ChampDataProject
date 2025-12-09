@@ -136,30 +136,6 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Quick Stats */}
-            <section className="section">
-                <h2 className="section-title">Aperçu Rapide</h2>
-
-                <div className="stats-grid">
-                    <div className="stat-card">
-                        <span className="stat-number">{championCount}</span>
-                        <span className="stat-label">Champions</span>
-                    </div>
-                    <div className="stat-card">
-                        <span className="stat-number">6</span>
-                        <span className="stat-label">Rôles</span>
-                    </div>
-                    <div className="stat-card">
-                        <span className="stat-number">5</span>
-                        <span className="stat-label">Benchmarks</span>
-                    </div>
-                    <div className="stat-card">
-                        <span className="stat-number">18</span>
-                        <span className="stat-label">Niveaux</span>
-                    </div>
-                </div>
-            </section>
-
             {loading && (
                 <div className="loading">Chargement des données...</div>
             )}
