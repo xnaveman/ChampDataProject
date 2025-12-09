@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import type { Champion } from '../../types/champion';
 import { 
   loadChampions, 
-  calculateStatsAtLevel
 } from '../../utils/championData';
 import {
   calculateDpsScores,
@@ -54,7 +53,6 @@ export default function Benchmark() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [champions, setChampions] = useState<Record<string, Champion>>({});
   const [loading, setLoading] = useState(true);
-  const [level, setLevel] = useState(6);
 
   const category = (searchParams.get('category') || 'tankiness') as BenchmarkType;
   const stat = (searchParams.get('stat') || 'hp') as StatType;
@@ -110,26 +108,6 @@ export default function Benchmark() {
           champion: c,
           score: calculateMobilityScores(c.id)?.overallScore || 0
         }));
-        break;
-      case 'base_stats':
-        scored = championList.map(c => {
-          const stats = calculateStatsAtLevel(c, level);
-          let value: number;
-          
-          switch (stat) {
-            case 'hp': value = stats.hp; break;
-            case 'armor': value = stats.armor; break;
-            case 'spellblock': value = stats.spellblock; break;
-            case 'attackdamage': value = stats.attackdamage; break;
-            case 'attackspeed': value = stats.attackspeed; break;
-            case 'movespeed': value = c.stats.movespeed; break;
-            case 'effectiveHp': value = (stats.effectiveHpPhysical + stats.effectiveHpMagic) / 2; break;
-            case 'dps': value = stats.dps; break;
-            default: value = 0;
-          }
-          
-          return { champion: c, score: value };
-        });
         break;
       default:
         scored = championList.map(c => ({ champion: c, score: 0 }));
@@ -191,18 +169,7 @@ export default function Benchmark() {
           </div>
         )}
 
-        <div className="control-group">
-          <label className="control-label">Niveau</label>
-          <input
-            type="range"
-            min="1"
-            max="18"
-            value={level}
-            onChange={(e) => setLevel(parseInt(e.target.value))}
-            className="level-slider"
-          />
-          <span className="level-display">{level}</span>
-        </div>
+
       </div>
 
       {/* Ranking Table */}
