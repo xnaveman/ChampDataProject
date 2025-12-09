@@ -27,14 +27,6 @@ import dpsIcon from '../../assets/icons/benchmark/LethalTempoTemp.png';
 import burstIcon from '../../assets/icons/benchmark/CheapShot.png';
 import utilityIcon from '../../assets/icons/benchmark/GlacialAugment.png';
 
-const SCORE_ICONS: Record<string, string> = {
-  dps: dpsIcon,
-  tankiness: tankinessIcon,
-  burst: burstIcon,
-  utility: utilityIcon,
-  mobility: mobilityIcon,
-};
-
 type BenchmarkCategory = 'dps' | 'tankiness' | 'burst' | 'utility' | 'mobility';
 
 export default function ChampionDetail() {
