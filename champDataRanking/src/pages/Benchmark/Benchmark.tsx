@@ -3,11 +3,15 @@ import { useSearchParams } from 'react-router-dom';
 import type { Champion } from '../../types/champion';
 import { 
   loadChampions, 
-  calculateStatsAtLevel, 
-  calculateTankinessScore,
-  calculateDpsScore,
-  calculateMobilityScore
+  calculateStatsAtLevel
 } from '../../utils/championData';
+import {
+  calculateDpsScores,
+  calculateTankinessScores,
+  calculateBurstScores,
+  calculateUtilityScores,
+  calculateMobilityScores
+} from '../../data/championBenchmarks';
 import ChampionCard from '../../components/ChampionCard/ChampionCard';
 import './Benchmark.css';
 
@@ -15,7 +19,8 @@ import './Benchmark.css';
 import mobilityIcon from '../../assets/icons/benchmark/CelerityTemp.png';
 import tankinessIcon from '../../assets/icons/benchmark/Overgrowth.png';
 import dpsIcon from '../../assets/icons/benchmark/LethalTempoTemp.png';
-import baseStatsIcon from '../../assets/icons/benchmark/GlacialAugment.png';
+import burstIcon from '../../assets/icons/benchmark/CheapShot.png';
+import utilityIcon from '../../assets/icons/benchmark/GlacialAugment.png';
 
 type BenchmarkType = 'tankiness' | 'burst' | 'dps' | 'utility' | 'mobility' | 'base_stats';
 type StatType = 'hp' | 'armor' | 'spellblock' | 'attackdamage' | 'attackspeed' | 'movespeed' | 'effectiveHp' | 'dps';
@@ -23,8 +28,9 @@ type StatType = 'hp' | 'armor' | 'spellblock' | 'attackdamage' | 'attackspeed' |
 const BENCHMARKS = [
   { id: 'tankiness', name: 'Tankiness', icon: tankinessIcon },
   { id: 'dps', name: 'DPS', icon: dpsIcon },
+  { id: 'burst', name: 'Burst', icon: burstIcon },
+  { id: 'utility', name: 'Utility', icon: utilityIcon },
   { id: 'mobility', name: 'Mobility', icon: mobilityIcon },
-  { id: 'base_stats', name: 'Base Stats', icon: baseStatsIcon },
 ];
 
 const STATS: { id: StatType; name: string }[] = [
@@ -78,19 +84,31 @@ export default function Benchmark() {
       case 'tankiness':
         scored = championList.map(c => ({
           champion: c,
-          score: calculateTankinessScore(c, level)
+          score: calculateTankinessScores(c.id)?.overallScore || 0
         }));
         break;
       case 'dps':
         scored = championList.map(c => ({
           champion: c,
-          score: calculateDpsScore(c, level)
+          score: calculateDpsScores(c.id)?.overallScore || 0
+        }));
+        break;
+      case 'burst':
+        scored = championList.map(c => ({
+          champion: c,
+          score: calculateBurstScores(c.id)?.overallScore || 0
+        }));
+        break;
+      case 'utility':
+        scored = championList.map(c => ({
+          champion: c,
+          score: calculateUtilityScores(c.id)?.overallScore || 0
         }));
         break;
       case 'mobility':
         scored = championList.map(c => ({
           champion: c,
-          score: calculateMobilityScore(c)
+          score: calculateMobilityScores(c.id)?.overallScore || 0
         }));
         break;
       case 'base_stats':
