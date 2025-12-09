@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import type { Champion } from '../../types/champion';
-import { 
-  loadChampions, 
-  getChampionIconUrl, 
+import {
+  loadChampions,
+  getChampionIconUrl,
   getChampionSplashUrl,
   calculateStatsAtLevel,
   calculateTankinessScore,
   calculateDpsScore,
   calculateMobilityScore
 } from '../../utils/championData';
-import { 
+import {
   getChampionBenchmark,
   calculateDpsScores,
   calculateTankinessScores,
@@ -74,7 +74,7 @@ export default function ChampionDetail() {
   const tankinessScore = calculateTankinessScore(champion, level);
   const dpsScore = calculateDpsScore(champion, level);
   const mobilityScore = calculateMobilityScore(champion);
-  
+
   // Benchmark data
   const benchmarkData = championId ? getChampionBenchmark(championId) : null;
   const dpsScores = championId ? calculateDpsScores(championId) : null;
@@ -95,15 +95,15 @@ export default function ChampionDetail() {
   return (
     <div className="champion-detail">
       {/* Header avec splash art */}
-      <div 
+      <div
         className="champion-header"
-        style={{ 
-          backgroundImage: `linear-gradient(to bottom, rgba(18, 18, 20, 0.7), rgba(18, 18, 20, 1)), url(${getChampionSplashUrl(champion.id)})` 
+        style={{
+          backgroundImage: `linear-gradient(to bottom, rgba(18, 18, 20, 0.7), rgba(18, 18, 20, 1)), url(${getChampionSplashUrl(champion.id)})`
         }}
       >
         <div className="header-content">
-          <img 
-            src={getChampionIconUrl(champion.id)} 
+          <img
+            src={getChampionIconUrl(champion.id)}
             alt={champion.name}
             className="champion-portrait"
           />
@@ -112,8 +112,8 @@ export default function ChampionDetail() {
             <p className="champion-title">{champion.title}</p>
             <div className="champion-tags">
               {champion.tags.map(tag => (
-                <span 
-                  key={tag} 
+                <span
+                  key={tag}
                   className="tag"
                   style={{ backgroundColor: roleColors[tag.toLowerCase()] || '#666' }}
                 >
@@ -161,13 +161,100 @@ export default function ChampionDetail() {
           </div>
         </section>
 
+        {/* Base Stats */}
+        <section className="section">
+          <h2 className="section-title">Stats de Base (Niveau {level})</h2>
+          <div className="stats-table">
+            <div className="stat-row">
+              <span className="stat-name">HP</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar hp"
+                  style={{ width: `${Math.min(stats.hp / 30, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{Math.round(stats.hp)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Mana</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar mana"
+                  style={{ width: `${Math.min(stats.mp / 20, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{Math.round(stats.mp)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Armure</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar armor"
+                  style={{ width: `${Math.min(stats.armor / 1.5, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{Math.round(stats.armor)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Résist. Magique</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar mr"
+                  style={{ width: `${Math.min(stats.spellblock / 1.2, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{Math.round(stats.spellblock)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Attack Damage</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar ad"
+                  style={{ width: `${Math.min(stats.attackdamage / 2, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{Math.round(stats.attackdamage)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Attack Speed</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar as"
+                  style={{ width: `${Math.min(stats.attackspeed * 80, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{stats.attackspeed.toFixed(3)}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Vitesse</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar ms"
+                  style={{ width: `${Math.min((champion.stats.movespeed - 300) / 0.6, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{champion.stats.movespeed}</span>
+            </div>
+            <div className="stat-row">
+              <span className="stat-name">Portée</span>
+              <div className="stat-bar-container">
+                <div
+                  className="stat-bar range"
+                  style={{ width: `${Math.min(champion.stats.attackrange / 6.5, 100)}%` }}
+                />
+              </div>
+              <span className="stat-value">{champion.stats.attackrange}</span>
+            </div>
+          </div>
+        </section>
+
         {/* Detailed Benchmark Categories */}
         <section className="section">
           <h2 className="section-title">Benchmarks Détaillés</h2>
-          
+
           {/* DPS */}
           <div className="benchmark-dropdown">
-            <button 
+            <button
               className={`benchmark-header ${expandedCategories.has('dps') ? 'expanded' : ''}`}
               onClick={() => toggleCategory('dps')}
             >
@@ -203,7 +290,7 @@ export default function ChampionDetail() {
 
           {/* Tankiness */}
           <div className="benchmark-dropdown">
-            <button 
+            <button
               className={`benchmark-header ${expandedCategories.has('tankiness') ? 'expanded' : ''}`}
               onClick={() => toggleCategory('tankiness')}
             >
@@ -239,7 +326,7 @@ export default function ChampionDetail() {
 
           {/* Burst */}
           <div className="benchmark-dropdown">
-            <button 
+            <button
               className={`benchmark-header ${expandedCategories.has('burst') ? 'expanded' : ''}`}
               onClick={() => toggleCategory('burst')}
             >
@@ -280,7 +367,7 @@ export default function ChampionDetail() {
 
           {/* Utility */}
           <div className="benchmark-dropdown">
-            <button 
+            <button
               className={`benchmark-header ${expandedCategories.has('utility') ? 'expanded' : ''}`}
               onClick={() => toggleCategory('utility')}
             >
@@ -341,7 +428,7 @@ export default function ChampionDetail() {
 
           {/* Mobility */}
           <div className="benchmark-dropdown">
-            <button 
+            <button
               className={`benchmark-header ${expandedCategories.has('mobility') ? 'expanded' : ''}`}
               onClick={() => toggleCategory('mobility')}
             >
@@ -381,93 +468,6 @@ export default function ChampionDetail() {
           </div>
         </section>
 
-        {/* Base Stats */}
-        <section className="section">
-          <h2 className="section-title">Stats de Base (Niveau {level})</h2>
-          <div className="stats-table">
-            <div className="stat-row">
-              <span className="stat-name">HP</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar hp" 
-                  style={{ width: `${Math.min(stats.hp / 30, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{Math.round(stats.hp)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Mana</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar mana" 
-                  style={{ width: `${Math.min(stats.mp / 20, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{Math.round(stats.mp)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Armure</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar armor" 
-                  style={{ width: `${Math.min(stats.armor / 1.5, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{Math.round(stats.armor)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Résist. Magique</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar mr" 
-                  style={{ width: `${Math.min(stats.spellblock / 1.2, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{Math.round(stats.spellblock)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Attack Damage</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar ad" 
-                  style={{ width: `${Math.min(stats.attackdamage / 2, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{Math.round(stats.attackdamage)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Attack Speed</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar as" 
-                  style={{ width: `${Math.min(stats.attackspeed * 80, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{stats.attackspeed.toFixed(3)}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Vitesse</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar ms" 
-                  style={{ width: `${Math.min((champion.stats.movespeed - 300) / 0.6, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{champion.stats.movespeed}</span>
-            </div>
-            <div className="stat-row">
-              <span className="stat-name">Portée</span>
-              <div className="stat-bar-container">
-                <div 
-                  className="stat-bar range" 
-                  style={{ width: `${Math.min(champion.stats.attackrange / 6.5, 100)}%` }}
-                />
-              </div>
-              <span className="stat-value">{champion.stats.attackrange}</span>
-            </div>
-          </div>
-        </section>
-
         {/* Calculated Stats */}
         <section className="section">
           <h2 className="section-title">Stats Calculées</h2>
@@ -499,8 +499,8 @@ export default function ChampionDetail() {
               <span className="rating-label">Attaque</span>
               <div className="rating-dots">
                 {[...Array(10)].map((_, i) => (
-                  <span 
-                    key={i} 
+                  <span
+                    key={i}
                     className={`dot ${i < champion.info.attack ? 'filled' : ''}`}
                   />
                 ))}
@@ -511,8 +511,8 @@ export default function ChampionDetail() {
               <span className="rating-label">Défense</span>
               <div className="rating-dots">
                 {[...Array(10)].map((_, i) => (
-                  <span 
-                    key={i} 
+                  <span
+                    key={i}
                     className={`dot ${i < champion.info.defense ? 'filled' : ''}`}
                   />
                 ))}
@@ -523,8 +523,8 @@ export default function ChampionDetail() {
               <span className="rating-label">Magie</span>
               <div className="rating-dots">
                 {[...Array(10)].map((_, i) => (
-                  <span 
-                    key={i} 
+                  <span
+                    key={i}
                     className={`dot ${i < champion.info.magic ? 'filled' : ''}`}
                   />
                 ))}
@@ -535,8 +535,8 @@ export default function ChampionDetail() {
               <span className="rating-label">Difficulté</span>
               <div className="rating-dots">
                 {[...Array(10)].map((_, i) => (
-                  <span 
-                    key={i} 
+                  <span
+                    key={i}
                     className={`dot ${i < champion.info.difficulty ? 'filled' : ''}`}
                   />
                 ))}
