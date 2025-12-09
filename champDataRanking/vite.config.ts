@@ -5,6 +5,8 @@ import path from 'path'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base: '/', // Important pour Vercel
+  publicDir: 'public',
   server: {
     fs: {
       // Permettre l'accès au dossier datadragon parent
