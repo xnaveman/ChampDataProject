@@ -6,11 +6,11 @@ import ChampionCard from '../../components/ChampionCard/ChampionCard';
 import './Home.css';
 
 //Import benchmark icons
-import mobility from '../../assets/icons/benchmark/CelerityTemp.png';
-import tankiness from '../../assets/icons/benchmark/Overgrowth.png';
-import dps from '../../assets/icons/benchmark/LethalTempoTemp.png';
-import burst from '../../assets/icons/benchmark/CheapShot.png';
-import utility from '../../assets/icons/benchmark/GlacialAugment.png';
+import mobility from '../../assets/icons/benchmark/icons/CelerityTemp.png';
+import tankiness from '../../assets/icons/benchmark/icons/Overgrowth.png';
+import dps from '../../assets/icons/benchmark/icons/LethalTempoTemp.png';
+import burst from '../../assets/icons/benchmark/icons/CheapShot.png';
+import utility from '../../assets/icons/benchmark/icons/GlacialAugment.png';
 
 // Import rune icons
 import ResolveIcon from '../../assets/icons/runes/7204_Resolve.png';
