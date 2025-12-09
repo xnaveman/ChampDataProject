@@ -11,14 +11,20 @@ import {
 import ChampionCard from '../../components/ChampionCard/ChampionCard';
 import './Benchmark.css';
 
+// Import benchmark icons from DataDragon-style assets
+import mobilityIcon from '../../assets/icons/benchmark/CelerityTemp.png';
+import tankinessIcon from '../../assets/icons/benchmark/Overgrowth.png';
+import dpsIcon from '../../assets/icons/benchmark/LethalTempoTemp.png';
+import baseStatsIcon from '../../assets/icons/benchmark/GlacialAugment.png';
+
 type BenchmarkType = 'tankiness' | 'burst' | 'dps' | 'utility' | 'mobility' | 'base_stats';
 type StatType = 'hp' | 'armor' | 'spellblock' | 'attackdamage' | 'attackspeed' | 'movespeed' | 'effectiveHp' | 'dps';
 
 const BENCHMARKS = [
-  { id: 'tankiness', name: 'Tankiness', icon: '🛡️' },
-  { id: 'dps', name: 'DPS', icon: '🔥' },
-  { id: 'mobility', name: 'Mobility', icon: '💨' },
-  { id: 'base_stats', name: 'Base Stats', icon: '📊' },
+  { id: 'tankiness', name: 'Tankiness', icon: tankinessIcon },
+  { id: 'dps', name: 'DPS', icon: dpsIcon },
+  { id: 'mobility', name: 'Mobility', icon: mobilityIcon },
+  { id: 'base_stats', name: 'Base Stats', icon: baseStatsIcon },
 ];
 
 const STATS: { id: StatType; name: string }[] = [
@@ -42,7 +48,7 @@ export default function Benchmark() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [champions, setChampions] = useState<Record<string, Champion>>({});
   const [loading, setLoading] = useState(true);
-  const [level, setLevel] = useState(18);
+  const [level, setLevel] = useState(6);
 
   const category = (searchParams.get('category') || 'tankiness') as BenchmarkType;
   const stat = (searchParams.get('stat') || 'hp') as StatType;
@@ -145,7 +151,7 @@ export default function Benchmark() {
                 className={`control-btn ${category === b.id ? 'active' : ''}`}
                 onClick={() => setCategory(b.id as BenchmarkType)}
               >
-                <span className="btn-icon">{b.icon}</span>
+                <img src={b.icon} alt={b.name} className="btn-icon-img" />
                 {b.name}
               </button>
             ))}
@@ -187,7 +193,6 @@ export default function Benchmark() {
           <span className="col-rank">#</span>
           <span className="col-champion">Champion</span>
           <span className="col-score">Score</span>
-          <span className="col-bar">Performance</span>
         </div>
 
         <div className="table-body">
@@ -207,16 +212,8 @@ export default function Benchmark() {
                   <ChampionCard champion={item.champion} />
                 </div>
                 <span className="col-score">
-                  {item.score.toFixed(1)}
+                  {percentage.toFixed(1)}%
                 </span>
-                <div className="col-bar">
-                  <div className="performance-bar">
-                    <div 
-                      className="performance-fill"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
               </div>
             );
           })}

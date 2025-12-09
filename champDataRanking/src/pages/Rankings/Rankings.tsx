@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { Champion } from '../../types/champion';
 import { 
   loadChampions, 
@@ -7,10 +8,42 @@ import {
   calculateMobilityScore,
   getChampionRole
 } from '../../utils/championData';
+import { 
+  calculateDpsScores,
+  calculateTankinessScores,
+  calculateBurstScores,
+  calculateUtilityScores,
+  calculateMobilityScores
+} from '../../data/championBenchmarks';
 import type { BenchmarkRole } from '../../types/champion';
 import { Link } from 'react-router-dom';
 import { getChampionIconUrl } from '../../utils/championData';
 import './Rankings.css';
+
+// Import benchmark icons
+import mobilityIcon from '../../assets/icons/benchmark/CelerityTemp.png';
+import tankinessIcon from '../../assets/icons/benchmark/Overgrowth.png';
+import dpsIcon from '../../assets/icons/benchmark/LethalTempoTemp.png';
+import burstIcon from '../../assets/icons/benchmark/CheapShot.png';
+import utilityIcon from '../../assets/icons/benchmark/GlacialAugment.png';
+
+type ScoreCategory = 'dps' | 'tankiness' | 'burst' | 'utility' | 'mobility';
+
+const SCORE_ICONS: Record<string, string> = {
+  dps: dpsIcon,
+  tankiness: tankinessIcon,
+  burst: burstIcon,
+  utility: utilityIcon,
+  mobility: mobilityIcon,
+};
+
+const SCORE_CATEGORIES: { id: ScoreCategory; name: string; description: string }[] = [
+  { id: 'dps', name: 'DPS', description: 'DPS soutenu sur 10-20 secondes' },
+  { id: 'tankiness', name: 'Tankiness', description: 'Résistance aux dégâts' },
+  { id: 'burst', name: 'Burst', description: 'Potentiel de burst' },
+  { id: 'utility', name: 'Utility', description: 'Shield, heal, CC, buffs' },
+  { id: 'mobility', name: 'Mobility', description: 'Dash, vitesse, ténacité' },
+];
 
 interface ChampionRanking {
   champion: Champion;
@@ -19,13 +52,34 @@ interface ChampionRanking {
   dps: number;
   mobility: number;
   overall: number;
+  customScore?: number;
+}
+
+function getCustomScore(championId: string, category: ScoreCategory): number {
+  switch (category) {
+    case 'dps':
+      return calculateDpsScores(championId)?.overallScore || 0;
+    case 'tankiness':
+      return calculateTankinessScores(championId)?.overallScore || 0;
+    case 'burst':
+      return calculateBurstScores(championId)?.overallScore || 0;
+    case 'utility':
+      return calculateUtilityScores(championId)?.overallScore || 0;
+    case 'mobility':
+      return calculateMobilityScores(championId)?.overallScore || 0;
+    default:
+      return 0;
+  }
 }
 
 export default function Rankings() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [champions, setChampions] = useState<Record<string, Champion>>({});
   const [loading, setLoading] = useState(true);
   const [selectedRole, setSelectedRole] = useState<BenchmarkRole | 'all'>('all');
-  const [level, setLevel] = useState(18);
+  const [level, setLevel] = useState(6);
+  
+  const scoreType = searchParams.get('scoreType') as ScoreCategory | null;
 
   useEffect(() => {
     loadChampions().then(data => {
@@ -61,6 +115,7 @@ export default function Rankings() {
       const dps = calculateDpsScore(c, level);
       const mobility = calculateMobilityScore(c);
       const role = getChampionRole(c);
+      const customScore = scoreType ? getCustomScore(c.id, scoreType) : undefined;
 
       // Score global pondéré selon le rôle
       let overall: number;
@@ -84,14 +139,20 @@ export default function Rankings() {
           overall = tankiness * 0.35 + dps * 0.4 + mobility * 0.25;
       }
 
-      return { champion: c, role, tankiness, dps, mobility, overall };
+      return { champion: c, role, tankiness, dps, mobility, overall, customScore };
     });
 
-    // Tri par score global
-    scored.sort((a, b) => b.overall - a.overall);
+    // Tri par score custom si sélectionné, sinon par score global
+    if (scoreType) {
+      scored.sort((a, b) => (b.customScore || 0) - (a.customScore || 0));
+    } else {
+      scored.sort((a, b) => b.overall - a.overall);
+    }
 
     return scored;
   })();
+
+  const currentScoreCategory = scoreType ? SCORE_CATEGORIES.find(c => c.id === scoreType) : null;
 
   if (loading) {
     return <div className="loading">Chargement...</div>;
@@ -100,10 +161,34 @@ export default function Rankings() {
   return (
     <div className="rankings-page">
       <div className="page-header">
-        <h1 className="page-title">Rankings</h1>
+        <h1 className="page-title">
+          {currentScoreCategory ? `Rankings: ${currentScoreCategory.name}` : 'Rankings'}
+        </h1>
         <p className="page-subtitle">
-          Classement global des champions basé sur leurs performances
+          {currentScoreCategory 
+            ? currentScoreCategory.description 
+            : 'Classement global des champions basé sur leurs performances'}
         </p>
+      </div>
+
+      {/* Score Type Selector */}
+      <div className="score-type-selector">
+        <button
+          className={`score-type-btn ${!scoreType ? 'active' : ''}`}
+          onClick={() => setSearchParams({})}
+        >
+          Global
+        </button>
+        {SCORE_CATEGORIES.map(cat => (
+          <button
+            key={cat.id}
+            className={`score-type-btn ${scoreType === cat.id ? 'active' : ''}`}
+            onClick={() => setSearchParams({ scoreType: cat.id })}
+          >
+            <img src={SCORE_ICONS[cat.id]} alt={cat.name} className="score-type-icon" />
+            {cat.name}
+          </button>
+        ))}
       </div>
 
       {/* Filters */}
@@ -152,7 +237,7 @@ export default function Rankings() {
               className={`top-card rank-${index + 1}`}
             >
               <div className="top-rank">
-                {index === 0 ? '👑' : index === 1 ? '🥈' : '🥉'}
+                {index + 1}
               </div>
               <img 
                 src={getChampionIconUrl(item.champion.id)}
@@ -163,7 +248,9 @@ export default function Rankings() {
                 <h3 className="top-name">{item.champion.name}</h3>
                 <span className="top-role">{item.role}</span>
               </div>
-              <div className="top-score">{item.overall.toFixed(1)}</div>
+              <div className="top-score">
+                {scoreType ? `${item.customScore || 0}%` : item.overall.toFixed(1)}
+              </div>
             </Link>
           ))}
         </div>
@@ -186,21 +273,29 @@ export default function Rankings() {
                 <span className="rank-name">{item.champion.name}</span>
                 <span className="rank-role">{item.role}</span>
               </div>
-              <div className="rank-scores">
-                <div className="mini-score">
-                  <span className="mini-label">Tank</span>
-                  <span className="mini-value">{item.tankiness.toFixed(0)}</span>
+              {scoreType ? (
+                <div className="rank-custom-score">
+                  {item.customScore || 0}%
                 </div>
-                <div className="mini-score">
-                  <span className="mini-label">DPS</span>
-                  <span className="mini-value">{item.dps.toFixed(0)}</span>
+              ) : (
+                <div className="rank-scores">
+                  <div className="mini-score">
+                    <span className="mini-label">Tank</span>
+                    <span className="mini-value">{item.tankiness.toFixed(0)}</span>
+                  </div>
+                  <div className="mini-score">
+                    <span className="mini-label">DPS</span>
+                    <span className="mini-value">{item.dps.toFixed(0)}</span>
+                  </div>
+                  <div className="mini-score">
+                    <span className="mini-label">Mob</span>
+                    <span className="mini-value">{item.mobility.toFixed(0)}</span>
+                  </div>
                 </div>
-                <div className="mini-score">
-                  <span className="mini-label">Mob</span>
-                  <span className="mini-value">{item.mobility.toFixed(0)}</span>
-                </div>
+              )}
+              <div className="rank-overall">
+                {scoreType ? `${item.customScore || 0}%` : item.overall.toFixed(1)}
               </div>
-              <div className="rank-overall">{item.overall.toFixed(1)}</div>
             </Link>
           ))}
         </div>

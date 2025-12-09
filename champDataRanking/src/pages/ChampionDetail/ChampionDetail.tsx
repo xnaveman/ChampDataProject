@@ -10,13 +10,51 @@ import {
   calculateDpsScore,
   calculateMobilityScore
 } from '../../utils/championData';
+import { 
+  getChampionBenchmark,
+  calculateDpsScores,
+  calculateTankinessScores,
+  calculateBurstScores,
+  calculateUtilityScores,
+  calculateMobilityScores
+} from '../../data/championBenchmarks';
 import './ChampionDetail.css';
+
+// Import benchmark icons
+import mobilityIcon from '../../assets/icons/benchmark/CelerityTemp.png';
+import tankinessIcon from '../../assets/icons/benchmark/Overgrowth.png';
+import dpsIcon from '../../assets/icons/benchmark/LethalTempoTemp.png';
+import burstIcon from '../../assets/icons/benchmark/CheapShot.png';
+import utilityIcon from '../../assets/icons/benchmark/GlacialAugment.png';
+
+const SCORE_ICONS: Record<string, string> = {
+  dps: dpsIcon,
+  tankiness: tankinessIcon,
+  burst: burstIcon,
+  utility: utilityIcon,
+  mobility: mobilityIcon,
+};
+
+type BenchmarkCategory = 'dps' | 'tankiness' | 'burst' | 'utility' | 'mobility';
 
 export default function ChampionDetail() {
   const { championId } = useParams<{ championId: string }>();
   const [champion, setChampion] = useState<Champion | null>(null);
-  const [level, setLevel] = useState(18);
+  const [level, setLevel] = useState(6);
   const [loading, setLoading] = useState(true);
+  const [expandedCategories, setExpandedCategories] = useState<Set<BenchmarkCategory>>(new Set());
+
+  const toggleCategory = (category: BenchmarkCategory) => {
+    setExpandedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
 
   useEffect(() => {
     loadChampions().then(data => {
@@ -44,6 +82,14 @@ export default function ChampionDetail() {
   const tankinessScore = calculateTankinessScore(champion, level);
   const dpsScore = calculateDpsScore(champion, level);
   const mobilityScore = calculateMobilityScore(champion);
+  
+  // Benchmark data
+  const benchmarkData = championId ? getChampionBenchmark(championId) : null;
+  const dpsScores = championId ? calculateDpsScores(championId) : null;
+  const tankinessScores = championId ? calculateTankinessScores(championId) : null;
+  const burstScores = championId ? calculateBurstScores(championId) : null;
+  const utilityScores = championId ? calculateUtilityScores(championId) : null;
+  const mobilityScores = championId ? calculateMobilityScores(championId) : null;
 
   const roleColors: Record<string, string> = {
     tank: '#4a90a4',
@@ -106,20 +152,240 @@ export default function ChampionDetail() {
           <h2 className="section-title">Scores de Benchmark</h2>
           <div className="scores-grid">
             <div className="score-card">
-              <span className="score-icon">🛡️</span>
+              <img src={tankinessIcon} alt="Tankiness" className="score-icon-img" />
               <span className="score-label">Tankiness</span>
               <span className="score-value">{tankinessScore.toFixed(1)}</span>
             </div>
             <div className="score-card">
-              <span className="score-icon">🔥</span>
+              <img src={dpsIcon} alt="DPS" className="score-icon-img" />
               <span className="score-label">DPS</span>
               <span className="score-value">{dpsScore.toFixed(1)}</span>
             </div>
             <div className="score-card">
-              <span className="score-icon">💨</span>
+              <img src={mobilityIcon} alt="Mobility" className="score-icon-img" />
               <span className="score-label">Mobility</span>
               <span className="score-value">{mobilityScore.toFixed(1)}</span>
             </div>
+          </div>
+        </section>
+
+        {/* Detailed Benchmark Categories */}
+        <section className="section">
+          <h2 className="section-title">Benchmarks Détaillés</h2>
+          
+          {/* DPS */}
+          <div className="benchmark-dropdown">
+            <button 
+              className={`benchmark-header ${expandedCategories.has('dps') ? 'expanded' : ''}`}
+              onClick={() => toggleCategory('dps')}
+            >
+              <div className="benchmark-header-left">
+                <img src={dpsIcon} alt="DPS" className="benchmark-icon" />
+                <span className="benchmark-name">DPS</span>
+              </div>
+              <div className="benchmark-header-right">
+                <span className="benchmark-score">{dpsScores?.overallScore || 0}%</span>
+                <span className="toggle-arrow">{expandedCategories.has('dps') ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {expandedCategories.has('dps') && benchmarkData?.dps && (
+              <div className="benchmark-content">
+                {benchmarkData.dps.description && (
+                  <p className="benchmark-description">{benchmarkData.dps.description}</p>
+                )}
+                <div className="benchmark-stats">
+                  <div className="benchmark-stat">
+                    <span className="stat-label">DPS sur 10s</span>
+                    <span className="stat-raw">{benchmarkData.dps.dps10s}</span>
+                    <span className="stat-score">{dpsScores?.dps10sScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">DPS sur 20s</span>
+                    <span className="stat-raw">{benchmarkData.dps.dps20s}</span>
+                    <span className="stat-score">{dpsScores?.dps20sScore || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Tankiness */}
+          <div className="benchmark-dropdown">
+            <button 
+              className={`benchmark-header ${expandedCategories.has('tankiness') ? 'expanded' : ''}`}
+              onClick={() => toggleCategory('tankiness')}
+            >
+              <div className="benchmark-header-left">
+                <img src={tankinessIcon} alt="Tankiness" className="benchmark-icon" />
+                <span className="benchmark-name">Tankiness</span>
+              </div>
+              <div className="benchmark-header-right">
+                <span className="benchmark-score">{tankinessScores?.overallScore || 0}%</span>
+                <span className="toggle-arrow">{expandedCategories.has('tankiness') ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {expandedCategories.has('tankiness') && benchmarkData?.tankiness && (
+              <div className="benchmark-content">
+                {benchmarkData.tankiness.description && (
+                  <p className="benchmark-description">{benchmarkData.tankiness.description}</p>
+                )}
+                <div className="benchmark-stats">
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Coups de tour (base)</span>
+                    <span className="stat-raw">{benchmarkData.tankiness.towerShotsBase}</span>
+                    <span className="stat-score">{tankinessScores?.baseScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Coups de tour (avec skills)</span>
+                    <span className="stat-raw">{benchmarkData.tankiness.towerShotsWithAbilities}</span>
+                    <span className="stat-score">{tankinessScores?.withAbilitiesScore || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Burst */}
+          <div className="benchmark-dropdown">
+            <button 
+              className={`benchmark-header ${expandedCategories.has('burst') ? 'expanded' : ''}`}
+              onClick={() => toggleCategory('burst')}
+            >
+              <div className="benchmark-header-left">
+                <img src={burstIcon} alt="Burst" className="benchmark-icon" />
+                <span className="benchmark-name">Burst Damage</span>
+              </div>
+              <div className="benchmark-header-right">
+                <span className="benchmark-score">{burstScores?.overallScore || 0}%</span>
+                <span className="toggle-arrow">{expandedCategories.has('burst') ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {expandedCategories.has('burst') && benchmarkData?.burst && (
+              <div className="benchmark-content">
+                {benchmarkData.burst.description && (
+                  <p className="benchmark-description">{benchmarkData.burst.description}</p>
+                )}
+                <div className="benchmark-stats">
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Dégâts totaux</span>
+                    <span className="stat-raw">{benchmarkData.burst.totalDamage}</span>
+                    <span className="stat-score">{burstScores?.damageScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">% PV max</span>
+                    <span className="stat-raw">{(benchmarkData.burst.maxHpPercent * 100).toFixed(1)}%</span>
+                    <span className="stat-score">{burstScores?.maxHpScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Temps du combo</span>
+                    <span className="stat-raw">{benchmarkData.burst.burstTime}s</span>
+                    <span className="stat-score">{burstScores?.speedScore || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Utility */}
+          <div className="benchmark-dropdown">
+            <button 
+              className={`benchmark-header ${expandedCategories.has('utility') ? 'expanded' : ''}`}
+              onClick={() => toggleCategory('utility')}
+            >
+              <div className="benchmark-header-left">
+                <img src={utilityIcon} alt="Utility" className="benchmark-icon" />
+                <span className="benchmark-name">Utility</span>
+              </div>
+              <div className="benchmark-header-right">
+                <span className="benchmark-score">{utilityScores?.overallScore || 0}%</span>
+                <span className="toggle-arrow">{expandedCategories.has('utility') ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {expandedCategories.has('utility') && benchmarkData?.utility && (
+              <div className="benchmark-content">
+                {benchmarkData.utility.description && (
+                  <p className="benchmark-description">{benchmarkData.utility.description}</p>
+                )}
+                <div className="benchmark-stats">
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Shield total</span>
+                    <span className="stat-raw">{benchmarkData.utility.shieldTotal}</span>
+                    <span className="stat-score">-</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Shield sur 20s</span>
+                    <span className="stat-raw">{benchmarkData.utility.shield20s}</span>
+                    <span className="stat-score">{utilityScores?.shieldScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Heal total</span>
+                    <span className="stat-raw">{benchmarkData.utility.healTotal}</span>
+                    <span className="stat-score">-</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Heal sur 20s</span>
+                    <span className="stat-raw">{benchmarkData.utility.heal20s}</span>
+                    <span className="stat-score">{utilityScores?.healScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">CC total</span>
+                    <span className="stat-raw">{benchmarkData.utility.ccTotal}s</span>
+                    <span className="stat-score">-</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">CC sur 20s</span>
+                    <span className="stat-raw">{benchmarkData.utility.cc20s}s</span>
+                    <span className="stat-score">{utilityScores?.ccScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Buff Gold Efficiency</span>
+                    <span className="stat-raw">{benchmarkData.utility.buffGoldEfficiency}g</span>
+                    <span className="stat-score">{utilityScores?.buffScore || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Mobility */}
+          <div className="benchmark-dropdown">
+            <button 
+              className={`benchmark-header ${expandedCategories.has('mobility') ? 'expanded' : ''}`}
+              onClick={() => toggleCategory('mobility')}
+            >
+              <div className="benchmark-header-left">
+                <img src={mobilityIcon} alt="Mobility" className="benchmark-icon" />
+                <span className="benchmark-name">Mobility</span>
+              </div>
+              <div className="benchmark-header-right">
+                <span className="benchmark-score">{mobilityScores?.overallScore || 0}%</span>
+                <span className="toggle-arrow">{expandedCategories.has('mobility') ? '▲' : '▼'}</span>
+              </div>
+            </button>
+            {expandedCategories.has('mobility') && benchmarkData?.mobility && (
+              <div className="benchmark-content">
+                {benchmarkData.mobility.description && (
+                  <p className="benchmark-description">{benchmarkData.mobility.description}</p>
+                )}
+                <div className="benchmark-stats">
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Distance de dash</span>
+                    <span className="stat-raw">{benchmarkData.mobility.dashDistance} unités</span>
+                    <span className="stat-score">{mobilityScores?.dashScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Bonus de vitesse</span>
+                    <span className="stat-raw">{benchmarkData.mobility.speedBonus}%</span>
+                    <span className="stat-score">{mobilityScores?.speedScore || 0}%</span>
+                  </div>
+                  <div className="benchmark-stat">
+                    <span className="stat-label">Slow resist / Ténacité</span>
+                    <span className="stat-raw">{benchmarkData.mobility.slowResistTenacity}%</span>
+                    <span className="stat-score">{mobilityScores?.tenacityScore || 0}%</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </section>
 
